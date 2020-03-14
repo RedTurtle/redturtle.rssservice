@@ -6,34 +6,11 @@
 redturtle.rssservice
 ====================
 
-Tell me what your product does
+This package contains a simple service: "@get_rss_feed".
+It's used as proxy to call rss feed from backend and not
+from frontend to avoid CORS
 
-Features
---------
-
-- Can be bullet points
-
-
-Examples
---------
-
-This add-on can be seen in action at the following sites:
-- Is there a page on the internet where everybody can see the features?
-
-
-Documentation
--------------
-
-Full documentation for end users can be found in the "docs" folder, and is also available online at http://docs.plone.org/foo/bar
-
-
-Translations
-------------
-
-This product has been translated into
-
-- Klingon (thanks, K'Plai)
-
+The service will return the string with the rss feed
 
 Installation
 ------------
@@ -63,7 +40,7 @@ Support
 -------
 
 If you are having issues, please let us know.
-We have a mailing list located at: project@example.com
+We have a mailing list located at: sviluppo@redturtle.it
 
 
 License
