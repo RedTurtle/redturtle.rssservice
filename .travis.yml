@@ -22,7 +22,7 @@ before_install:
 install:
   - bin/buildout -N -t 3 code-analysis:return-status-codes=True
 
-  script:
+script:
   - bin/code-analysis
   - bin/test
 
