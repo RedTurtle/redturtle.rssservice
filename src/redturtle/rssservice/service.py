@@ -1,4 +1,4 @@
-from plone.restapi.services import Service, _no_content_marker
+from plone.restapi.services import Service
 from redturtle.rssservice import _
 from zope.i18n import translate
 

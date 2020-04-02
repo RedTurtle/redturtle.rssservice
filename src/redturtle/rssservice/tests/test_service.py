@@ -10,7 +10,6 @@ from redturtle.rssservice.testing import (
 from unittest import mock
 
 import unittest
-import requests
 
 EXAMPLE_FEED = '''
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
