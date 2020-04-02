@@ -7,6 +7,7 @@ from plone.restapi.testing import RelativeSession
 from redturtle.rssservice.testing import (
     REDTURTLE_RSSSERVICE_API_FUNCTIONAL_TESTING,
 )
+from requests.exceptions import Timeout
 from unittest import mock
 
 import unittest
@@ -42,6 +43,8 @@ def mocked_requests_get(*args, **kwargs):
         return MockResponse(text=EXAMPLE_FEED, status_code=200)
     if args[0] == 'http://test.com/toomany/RSS':
         return MockResponse(text='Too Many Requests', status_code=429)
+    if args[0] == 'http://test.com/timeout/RSS':
+        raise Timeout
     return MockResponse(text='Not Found', status_code=404)
 
 
@@ -91,3 +94,14 @@ class RSSServiceTest(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.text, EXAMPLE_FEED)
+
+    @mock.patch('requests.get', side_effect=mocked_requests_get)
+    def test_feed_timeout(self, mock_get):
+        response = self.api_session.get(
+            "/@get_rss_feed?feed=http://test.com/timeout/RSS"
+        )
+        self.assertEqual(response.status_code, 408)
+        self.assertEqual(
+            response.text,
+            'Unable to fetch RSS feed at this moment: timeout. Retry later.',
+        )
