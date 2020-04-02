@@ -43,9 +43,8 @@ and then running ``bin/buildout``
 Contribute
 ----------
 
-- Issue Tracker: https://github.com/collective/redturtle.rssservice/issues
-- Source Code: https://github.com/collective/redturtle.rssservice
-- Documentation: https://docs.plone.org/foo/bar
+- Issue Tracker: https://github.com/RedTurtle/redturtle.rssservice/issues
+- Source Code: https://github.com/RedTurtle/redturtle.rssservice
 
 
 Support
