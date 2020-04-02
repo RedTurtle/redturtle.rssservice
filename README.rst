@@ -2,15 +2,27 @@
    If you want to learn more about writing documentation, please check out: http://docs.plone.org/about/documentation_styleguide.html
    This text does not appear on pypi or github. It is a comment.
 
-====================
-redturtle.rssservice
-====================
+=====================
+Redturtle RSS Service
+=====================
 
-This package contains a simple service: "@get_rss_feed".
-It's used as proxy to call rss feed from backend and not
-from frontend to avoid CORS
+.. image:: https://travis-ci.com/collective/collective.volto.cookieconsent.svg?branch=master
+    :target: https://travis-ci.com/collective/collective.volto.cookieconsent
 
-The service will return the string with the rss feed
+This package contains a service: "@get_rss_feed" that is used as proxy to call an
+RSS feed from backend and not from frontend to avoid CORS problems.
+
+The service will reply with an "application/rss+xml" response with the desired feed.
+
+Each feed url has a 10 minutes cache for his result to avoid too much requests.
+
+Usage
+-----
+
+You can call the endpoint passing a *feed* parameter like this example::
+
+    > curl -i http://localhost:8080/Plone/@get_rss_feed?feed=https://www.plone.org/RSS -H 'Accept: application/json'
+
 
 Installation
 ------------
