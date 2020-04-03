@@ -107,4 +107,4 @@ class GetRSSFeedService(Service):
                     message=message,
                 )
             )
-        return {'data': response.text}
+        return {'data': response.content}
