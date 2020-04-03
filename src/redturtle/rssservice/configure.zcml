@@ -7,7 +7,7 @@
     <plone:service
         method="GET"
         name="@get_rss_feed"
-        accept="application/json"
+        accept="application/rss+xml"
         for="*"
         factory=".service.GetRSSFeedService"
         permission="zope.Public"

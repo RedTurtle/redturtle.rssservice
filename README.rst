@@ -21,7 +21,7 @@ Usage
 
 You can call the endpoint passing a *feed* parameter like this example::
 
-    > curl -i http://localhost:8080/Plone/@get_rss_feed?feed=https://www.plone.org/RSS -H 'Accept: application/json'
+    > curl -i http://localhost:8080/Plone/@get_rss_feed?feed=https://www.plone.org/RSS -H 'Accept: application/rss+xml'
 
 
 Installation
