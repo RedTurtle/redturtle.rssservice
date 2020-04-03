@@ -33,11 +33,15 @@ def mocked_requests_get(*args, **kwargs):
     class MockResponse:
         def __init__(self, text, status_code, reason=''):
             self.text = text
+            self.content = text
             self.status_code = status_code
             self.reason = reason
 
         def text(self):
             return self.text
+
+        def content(self):
+            return self.content
 
     if args[0] == 'http://test.com/RSS':
         return MockResponse(text=EXAMPLE_FEED, status_code=200)
@@ -58,7 +62,7 @@ class RSSServiceTest(unittest.TestCase):
         self.portal_url = self.portal.absolute_url()
 
         self.api_session = RelativeSession(self.portal_url)
-        self.api_session.headers.update({"Accept": "application/json"})
+        self.api_session.headers.update({"Accept": "application/rss+xml"})
         self.api_session.auth = (SITE_OWNER_NAME, SITE_OWNER_PASSWORD)
 
         setRoles(self.portal, TEST_USER_ID, ["Manager"])
