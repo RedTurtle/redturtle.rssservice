@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-1.0a1 (unreleased)
+0.1.0 (2020-04-08)
 ------------------
 
 - Initial release.
