@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
-from plone.restapi.services import Service
-from time import time
+from DateTime import DateTime
 from plone.restapi.search.utils import unflatten_dotted_dict
-from zope.i18n import translate
+from plone.restapi.services import Service
 from redturtle.rssservice import _
-from zope.interface import implementer
 from redturtle.rssservice.interfaces import IRSSMixerFeed
 from requests.exceptions import RequestException
 from requests.exceptions import Timeout
-from DateTime import DateTime
+from time import time
 from zExceptions import BadRequest
-from plone.restapi.serializer.converters import json_compatible
+from zope.i18n import translate
+from zope.interface import implementer
 
 import feedparser
 import requests
