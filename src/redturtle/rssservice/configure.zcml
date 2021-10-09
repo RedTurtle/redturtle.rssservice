@@ -9,9 +9,16 @@
         name="@get_rss_feed"
         accept="application/rss+xml"
         for="*"
-        factory=".service.GetRSSFeedService"
+        factory=".rss_feed.GetRSSFeedService"
         permission="zope.Public"
         />
 
+    <plone:service
+        method="GET"
+        name="@get_rss_from_block"
+        for="*"
+        factory=".rss_mixer.GetRSSMixerService"
+        permission="zope.Public"
+        />
 
 </configure>
