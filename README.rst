@@ -32,13 +32,16 @@ You can call the endpoint passing a *feed* parameter like this example::
 RSS block
 ---------
 
-There is a service "**@get_rss_from_block**" that need to be called on a content with blocks with a valid *block_id*.
+There is a service "**@rss_mixer_data**" that accept a list of sources and limit, and return a list of sorted feeds by date.
 
-The service will get all configured sources, fetch data and return a list of sorted feeds by date.
+This service only accept POST calls and accept following parameters:
+
+- limit: the number of items to show (default 20)
+- feeds: a list of objects like this: {"url": "url-of-the-feed", "source": "A custom label"}
 
 For example::
 
-    > curl -i http://localhost:8080/Plone/my-page/@get_rss_from_block?block_id=123456 -H 'Accept: application/json'
+    > curl -i -X POST http://localhost:8080/Plone/@rss_mixer_data -H 'Accept: application/json' -H 'Content-Type: application/json' --data-raw '{"limit":5, "feeds": [{"url": "url-of-the-feed", "source": "A custom label"}]}'
 
 
 Will reply with something like this::
@@ -46,30 +49,30 @@ Will reply with something like this::
     [
         {
             "source": "Foo site",
-            "summary": "some description 2",
+            "contentSnippet": "some description 2",
             "title": "Foo News 2",
-            "updated": "Thu, 1 Apr 2020 10:44:01 +0200",
+            "date": "Thu, 1 Apr 2020 10:44:01 +0200",
             "url": "http://test.com/foo-news-2"
         },
         {
             "source": "",
-            "summary": "some description 2",
+            "contentSnippet": "some description 2",
             "title": "Bar News 2",
-            "updated": "Thu, 1 Apr 2020 10:44:01 +0200",
+            "date": "Thu, 1 Apr 2020 10:44:01 +0200",
             "url": "http://test.com/bar-news-2"
         },
         {
             "source": "Foo site",
-            "summary": "some description",
+            "contentSnippet": "some description",
             "title": "Foo News 1",
-            "updated": "Thu, 2 Apr 2020 10:44:01 +0200",
+            "date": "Thu, 2 Apr 2020 10:44:01 +0200",
             "url": "http://test.com/foo-news-1"
         },
         {
             "source": "",
-            "summary": "some description",
+            "contentSnippet": "some description",
             "title": "Bar News 1",
-            "updated": "Thu, 2 Apr 2020 10:44:01 +0200",
+            "date": "Thu, 2 Apr 2020 10:44:01 +0200",
             "url": "http://test.com/bar-news-1"
         }
     ]

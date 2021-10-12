@@ -8,16 +8,16 @@
         method="GET"
         name="@get_rss_feed"
         accept="application/rss+xml"
-        for="*"
+        for="plone.app.layout.navigation.interfaces.INavigationRoot"
         factory=".rss_feed.GetRSSFeedService"
         permission="zope.Public"
         />
 
     <plone:service
-        method="GET"
-        name="@get_rss_from_block"
-        for="*"
-        factory=".rss_mixer.GetRSSMixerService"
+        method="POST"
+        name="@rss_mixer_data"
+        for="plone.app.layout.navigation.interfaces.INavigationRoot"
+        factory=".rss_mixer.POSTRSSMixerService"
         permission="zope.Public"
         />
 

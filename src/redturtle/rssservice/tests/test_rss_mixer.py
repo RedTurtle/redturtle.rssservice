@@ -4,13 +4,13 @@ from plone.app.testing import SITE_OWNER_NAME
 from plone.app.testing import SITE_OWNER_PASSWORD
 from plone.app.testing import TEST_USER_ID
 from plone.restapi.testing import RelativeSession
+from redturtle.rssservice.rss_mixer import FEED_DATA
 from redturtle.rssservice.testing import (
     REDTURTLE_RSSSERVICE_API_FUNCTIONAL_TESTING,
 )
 from requests.exceptions import Timeout
-from plone import api
-from unittest import mock
 from transaction import commit
+from unittest import mock
 
 import unittest
 
@@ -123,22 +123,6 @@ class RSSSMixerTest(unittest.TestCase):
         self.portal_url = self.portal.absolute_url()
         setRoles(self.portal, TEST_USER_ID, ["Manager"])
 
-        self.doc = api.content.create(
-            container=self.portal,
-            type="Document",
-            title="Doc",
-            blocks={
-                "non-rss-block": {"@type": "not-rss"},
-                "rss-block": {
-                    "@type": "rssBlock",
-                    "feeds": [
-                        {"url": "http://foo.com/RSS", "source": "Foo site"},
-                        {"url": "http://bar.com/RSS"},
-                    ],
-                },
-            },
-        )
-
         self.api_session = RelativeSession(self.portal_url)
         self.api_session.headers.update({"Accept": "application/json"})
         self.api_session.auth = (SITE_OWNER_NAME, SITE_OWNER_PASSWORD)
@@ -146,36 +130,50 @@ class RSSSMixerTest(unittest.TestCase):
         commit()
 
     def tearDown(self):
+        # invalidate cache
+        for feed in FEED_DATA.values():
+            feed._last_update_time_in_minutes = 0
         self.api_session.close()
 
-    def test_block_id_parameter_is_required(self):
-        response = self.api_session.get("/doc/@get_rss_from_block")
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-            response.json()["message"], "Missing required parameter: block_id"
+    def get_feed_data(self, query):
+        response = self.api_session.post(
+            "/@rss_mixer_data?block_id=rss-block", json=query
         )
+        return response.json()
 
-    def test_works_only_for_rssblocks(self):
-        response = self.api_session.get(
-            "/doc/@get_rss_from_block?block_id=non-rss-block"
-        )
+    def test_feeds_parameter_is_required(self):
+        response = self.api_session.post("/@rss_mixer_data", json={"foo": "bar"})
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.json()["message"],
-            'Block with id "non-rss-block" is not a RSS block, but "not-rss".',
+            response.json()["message"], "Missing required parameter: feeds"
         )
 
     @mock.patch("requests.get", side_effect=mocked_requests_get)
-    def test_feed_result(self, mock_get):
-        response = self.api_session.get("/doc/@get_rss_from_block?block_id=rss-block")
-        res = response.json()
-        self.assertEqual(response.status_code, 200)
+    def test_feed_single_result(self, mock_get):
+        query = {"feeds": [{"url": "http://foo.com/RSS"}]}
+        res = self.get_feed_data(query=query)
+        self.assertEqual(len(res), 2)
+
+    @mock.patch("requests.get", side_effect=mocked_requests_get)
+    def test_feed_mixed_result(self, mock_get):
+        query = {
+            "feeds": [
+                {"url": "http://foo.com/RSS"},
+                {"url": "http://bar.com/RSS"},
+            ]
+        }
+        res = self.get_feed_data(query=query)
         self.assertEqual(len(res), 4)
 
     @mock.patch("requests.get", side_effect=mocked_requests_get)
     def test_feed_results_are_sorted_by_date_descending(self, mock_get):
-        response = self.api_session.get("/doc/@get_rss_from_block?block_id=rss-block")
-        res = response.json()
+        query = {
+            "feeds": [
+                {"url": "http://foo.com/RSS"},
+                {"url": "http://bar.com/RSS"},
+            ]
+        }
+        res = self.get_feed_data(query=query)
 
         self.assertEqual(res[0]["title"], "Foo News 1")
         self.assertEqual(res[1]["title"], "Bar News 1")
@@ -183,13 +181,17 @@ class RSSSMixerTest(unittest.TestCase):
         self.assertEqual(res[3]["title"], "Bar News 2")
 
     @mock.patch("requests.get", side_effect=mocked_requests_get)
-    def test_feed_results_from_foo_have_the_source(self, mock_get):
-        response = self.api_session.get("/doc/@get_rss_from_block?block_id=rss-block")
-        res = response.json()
+    def test_return_source_info_in_feeds(self, mock_get):
+        query = {
+            "feeds": [
+                {"url": "http://foo.com/RSS", "source": "Foo site"},
+                {"url": "http://bar.com/RSS"},
+            ],
+        }
+
+        res = self.get_feed_data(query=query)
 
         self.assertEqual(res[0]["source"], "Foo site")
         self.assertEqual(res[1]["source"], "")
         self.assertEqual(res[2]["source"], "Foo site")
         self.assertEqual(res[3]["source"], "")
-
-        response = self.api_session.get("/doc/@get_rss_from_block?block_id=rss-block")

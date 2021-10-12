@@ -5,7 +5,7 @@ Changelog
 0.1.1 (unreleased)
 ------------------
 
-- Add @get_rss_from_block endpoint.
+- Add @rss_mixer_data endpoint.
   [cekk]
 
 

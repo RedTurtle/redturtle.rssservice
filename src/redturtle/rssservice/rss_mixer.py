@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
+from plone.restapi.serializer.converters import json_compatible
 from DateTime import DateTime
-from plone.restapi.search.utils import unflatten_dotted_dict
 from plone.restapi.services import Service
 from redturtle.rssservice import _
 from redturtle.rssservice.interfaces import IRSSMixerFeed
@@ -10,6 +10,7 @@ from time import time
 from zExceptions import BadRequest
 from zope.i18n import translate
 from zope.interface import implementer
+from plone.restapi.deserializer import json_body
 
 import feedparser
 import requests
@@ -26,51 +27,32 @@ ACCEPTED_FEEDPARSER_EXCEPTIONS = (feedparser.CharacterEncodingOverride,)
 FEED_DATA = {}  # url: ({date, title, url, itemlist})
 
 
-class GetRSSMixerService(Service):
-    """
-    Proxy route
-    """
+class POSTRSSMixerService(Service):
+    """ """
 
     def reply(self):
-        query = self.request.form.copy()
-        query = unflatten_dotted_dict(query)
+        query = json_body(self.request)
 
-        if "block_id" not in query:
+        limit = query.get("limit", 20)
+        feeds = query.get("feeds", [])
+        if not feeds:
             raise BadRequest(
                 translate(
                     _(
-                        "missing_block_id_parameter",
-                        default="Missing required parameter: block_id",
+                        "missing_feeds_parameter",
+                        default="Missing required parameter: feeds",
                     ),
                     context=self.request,
                 )
             )
+        return self._getFeeds(feeds=feeds, limit=limit)
 
-        return self._getFeeds(block_id=query["block_id"], limit=query.get("limit", 20))
-
-    def _getFeeds(self, block_id, limit=20):
+    def _getFeeds(self, feeds, limit=20):
         """Return all feeds"""
-        feeds = []  # a list of feed objects
-        blocks = getattr(self.context, "blocks", {})
-        rss_block = blocks.get(block_id, None)
-        if not rss_block:
-            return []
-        if rss_block.get("@type", "") != "rssBlock":
-            raise BadRequest(
-                translate(
-                    _(
-                        "block_id_wrong_type",
-                        default='Block with id "{}" is not a RSS block, but "{}".'.format(
-                            block_id, rss_block["@type"]
-                        ),
-                    ),
-                    context=self.request,
-                )
-            )
-        for feed_data in rss_block.get("feeds", []):
+        data = []
+        for feed_data in feeds:
             url = feed_data.get("url", "")
             source = feed_data.get("source", "")
-
             feed = FEED_DATA.get(url, None)
             if feed is None:
                 # create it
@@ -80,9 +62,13 @@ class GetRSSMixerService(Service):
                     timeout=100,
                 )
             # if it's new, populate it, else try to see if it need to be updated
+            else:
+                # check if we need to update the source
+                if feed.source != source:
+                    feed.source = source
             feed.update()
-            feeds.append(feed)
-        return self._sortedFeeds(feeds=feeds, limit=limit)
+            data.append(feed)
+        return self._sortedFeeds(feeds=data, limit=limit)
 
     def _sortedFeeds(self, feeds, limit):
         """Sort feed items by date"""
@@ -91,11 +77,11 @@ class GetRSSMixerService(Service):
         itemsWithoutDate = []
         for feed in feeds:
             for item in feed.items:
-                if "updated" in item:
+                if "date" in item:
                     itemsWithDate.append(item)
                 else:
                     itemsWithoutDate.append(item)
-        sortedItems = sorted(itemsWithDate, key=lambda d: d["updated"], reverse=True)
+        sortedItems = sorted(itemsWithDate, key=lambda d: d["date"], reverse=True)
         total = sortedItems + itemsWithoutDate
 
         # fix date format
@@ -188,47 +174,59 @@ class RSSMixerFeed(object):
     def _retrieveFeed(self):
         """Do the actual work and try to retrieve the feed."""
         url = self.url
-        if url != "":
-            self._last_update_time_in_minutes = time() / 60
-            self._last_update_time = DateTime()
-            parsed_feed = self._getFeedFromUrl(url)
-            if not parsed_feed:
-                self._loaded = True  # we tried at least but have a failed load
-                self._failed = True
-                return False
-            if parsed_feed.bozo == 1 and not isinstance(
-                parsed_feed.get("bozo_exception"),
-                ACCEPTED_FEEDPARSER_EXCEPTIONS,
-            ):
-                self._loaded = True  # we tried at least but have a failed load
-                self._failed = True
-                return False
-            self._title = parsed_feed.feed.title
-            self._siteurl = parsed_feed.feed.link
-            self._items = []
-
-            for item in parsed_feed["items"]:
-                try:
-                    link = item.links[0]["href"]
-                    itemdict = {
-                        "title": item.title,
-                        "url": link,
-                        "summary": item.get("description", ""),
-                        "source": self.source,
-                    }
-                    if getattr(item, "updated", None):
-                        itemdict["updated"] = item.updated
-                except AttributeError:
-                    continue
-                self._items.append(itemdict)
+        if not url:
             self._loaded = True
-            self._failed = False
-            return True
+            self._failed = True  # no url set means failed
+            # no url set, although that actually should not really happen
+            return False
+        self._last_update_time_in_minutes = time() / 60
+        self._last_update_time = DateTime()
+        parsed_feed = self._getFeedFromUrl(url)
+        if not parsed_feed:
+            self._loaded = True  # we tried at least but have a failed load
+            self._failed = True
+            return False
+        if parsed_feed.bozo == 1 and not isinstance(
+            parsed_feed.get("bozo_exception"),
+            ACCEPTED_FEEDPARSER_EXCEPTIONS,
+        ):
+            self._loaded = True  # we tried at least but have a failed load
+            self._failed = True
+            return False
+        self._title = parsed_feed.feed.title
+        self._siteurl = parsed_feed.feed.link
+        self._items = []
 
+        for item in parsed_feed["items"]:
+            try:
+                itemdict = {
+                    "title": item.title,
+                    "url": item.get("link", ""),
+                    "contentSnippet": item.get("description", ""),
+                    "source": self.source,
+                }
+                date = None
+                if item.get("updated", None):
+                    date = DateTime(item.updated)
+                elif getattr(item, "published", None):
+                    date = DateTime(item.published)
+                if date:
+                    itemdict["date"] = json_compatible(date)
+                if item.get("media_thumbnail", []):
+                    itemdict["image"] = item["media_thumbnail"][0].get("url", "")
+                elif item.get("media_content", []):
+                    images = [
+                        x.get("url", "")
+                        for x in item.media_content
+                        if x.get("medium", "") == "image"
+                    ]
+                    itemdict["image"] = images[0]
+            except AttributeError:
+                continue
+            self._items.append(itemdict)
         self._loaded = True
-        self._failed = True  # no url set means failed
-        # no url set, although that actually should not really happen
-        return False
+        self._failed = False
+        return True
 
     @property
     def items(self):
