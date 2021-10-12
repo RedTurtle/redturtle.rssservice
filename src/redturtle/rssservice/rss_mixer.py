@@ -211,7 +211,8 @@ class RSSMixerFeed(object):
 
             image = self.get_item_image(item=item)
             if image:
-                itemdict["image"] = image
+                # format needed in blocks to keep compatibility
+                itemdict["enclosure"] = image
 
             self._items.append(itemdict)
         self._loaded = True
@@ -226,8 +227,9 @@ class RSSMixerFeed(object):
         return ""
 
     def get_item_image(self, item):
+        image = ""
         if item.get("media_thumbnail", []):
-            return item["media_thumbnail"][0].get("url", "")
+            image = item["media_thumbnail"][0].get("url", "")
         elif item.get("media_content", []):
             images = [
                 x.get("url", "")
@@ -235,7 +237,7 @@ class RSSMixerFeed(object):
                 if x.get("medium", "") == "image"
             ]
             if images:
-                return images[0]
+                image = images[0]
         elif item.get("links", []):
             images = [
                 x.get("url", "")
@@ -243,8 +245,10 @@ class RSSMixerFeed(object):
                 if x.get("rel", "") == "enclosure" and "image" in x.get("type", "")
             ]
             if images:
-                return images[0]
-        return ""
+                image = images[0]
+        if not image:
+            return {}
+        return {"url": image}
 
     @property
     def items(self):
