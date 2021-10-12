@@ -198,35 +198,53 @@ class RSSMixerFeed(object):
         self._items = []
 
         for item in parsed_feed["items"]:
-            try:
-                itemdict = {
-                    "title": item.title,
-                    "url": item.get("link", ""),
-                    "contentSnippet": item.get("description", ""),
-                    "source": self.source,
-                }
-                date = None
-                if item.get("updated", None):
-                    date = DateTime(item.updated)
-                elif getattr(item, "published", None):
-                    date = DateTime(item.published)
-                if date:
-                    itemdict["date"] = json_compatible(date)
-                if item.get("media_thumbnail", []):
-                    itemdict["image"] = item["media_thumbnail"][0].get("url", "")
-                elif item.get("media_content", []):
-                    images = [
-                        x.get("url", "")
-                        for x in item.media_content
-                        if x.get("medium", "") == "image"
-                    ]
-                    itemdict["image"] = images[0]
-            except AttributeError:
-                continue
+            itemdict = {
+                "title": item.title,
+                "url": item.get("link", ""),
+                "contentSnippet": item.get("description", ""),
+                "source": getattr(self, "source", ""),
+            }
+
+            date = self.get_item_date(item=item)
+            if date:
+                itemdict["date"] = date
+
+            image = self.get_item_image(item=item)
+            if image:
+                itemdict["image"] = image
+
             self._items.append(itemdict)
         self._loaded = True
         self._failed = False
         return True
+
+    def get_item_date(self, item):
+        if getattr(item, "updated", None):
+            return json_compatible(DateTime(item.updated))
+        elif getattr(item, "published", None):
+            return json_compatible(DateTime(item.published))
+        return ""
+
+    def get_item_image(self, item):
+        if item.get("media_thumbnail", []):
+            return item["media_thumbnail"][0].get("url", "")
+        elif item.get("media_content", []):
+            images = [
+                x.get("url", "")
+                for x in item.media_content
+                if x.get("medium", "") == "image"
+            ]
+            if images:
+                return images[0]
+        elif item.get("links", []):
+            images = [
+                x.get("url", "")
+                for x in item.links
+                if x.get("rel", "") == "enclosure" and "image" in x.get("type", "")
+            ]
+            if images:
+                return images[0]
+        return ""
 
     @property
     def items(self):
