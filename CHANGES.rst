@@ -5,7 +5,8 @@ Changelog
 1.0.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Allow dates with wrong date format (eg. a date range)
+  [lucabel]
 
 
 1.0.1 (2021-12-02)
