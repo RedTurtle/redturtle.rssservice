@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from plone.restapi.serializer.converters import json_compatible
 from DateTime import DateTime
+from DateTime.interfaces import SyntaxError
 from plone.restapi.services import Service
 from redturtle.rssservice import _
 from redturtle.rssservice.interfaces import IRSSMixerFeed
@@ -221,9 +222,16 @@ class RSSMixerFeed(object):
 
     def get_item_date(self, item):
         if getattr(item, "updated", None):
-            return json_compatible(DateTime(item.updated))
+            try:
+                return json_compatible(DateTime(item.updated))
+            except SyntaxError:
+                return json_compatible(item.updated)
         elif getattr(item, "published", None):
-            return json_compatible(DateTime(item.published))
+            try:
+                return json_compatible(DateTime(item.published))
+            except SyntaxError:
+                return json_compatible(item.published)
+
         return ""
 
     def get_item_image(self, item):
