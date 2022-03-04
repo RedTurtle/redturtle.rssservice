@@ -1,8 +1,7 @@
 Changelog
 =========
 
-
-1.0.2 (unreleased)
+1.0.2 (2022-03-04)
 ------------------
 
 - Allow dates with wrong date format (eg. a date range)

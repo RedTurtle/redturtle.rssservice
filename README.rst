@@ -6,9 +6,6 @@
 Redturtle RSS Service
 =====================
 
-.. image:: https://travis-ci.com/collective/collective.volto.cookieconsent.svg?branch=master
-    :target: https://travis-ci.com/collective/collective.volto.cookieconsent
-
 This package add support to retrieve RSS feeds from external sources.
 
 Usage
