@@ -214,7 +214,7 @@ class RSSMixerFeed(object):
             if image:
                 # format needed in blocks to keep compatibility
                 itemdict["enclosure"] = image
- 
+
             categories = self.get_item_categories(item=item)
             if categories:
                 itemdict["categories"] = categories
