@@ -113,6 +113,42 @@ EXAMPLE_FEED_WRONG_DATE_FORMAT = """
 </rss>
 """
 
+EXAMPLE_FEED_WITH_CATEGORIES = """
+<rss version="2.0">
+<channel xmlns:atom="http://www.w3.org/2005/Atom">
+<title>Eventi del comune di XYZ</title>
+<link>https://www.xyz.it/</link>
+<description>RSS Eventi del comune di XYZ</description>
+<image>
+<url>https://www.XYZ.it/logo.png</url>
+<title>Eventi del comune di XYZ</title>
+<link>https://www.xyz.it/</link>
+</image>
+<atom:link href="https://www.xyz.it" rel="self" type="application/rss+xml"/>
+<item>
+<guid isPermaLink="true">https://www.xyz.it/event.html</guid>
+<link>https://www.xyz.it/event.html</link>
+<title>Event Title</title>
+<category>Category C</category>
+<description>Event Description</description>
+<enclosure type="image/jpg" url="https://www.xyz.it/image" width="700" height="470"/>
+<pubDate>07/03/2022 17.30 - 07/03/2022 19.00</pubDate>
+</item>
+<item>
+<guid isPermaLink="true">https://www.xyz.it/event.html</guid>
+<link>https://www.xyz.it/event.html</link>
+<title>Event Title</title>
+<category>Category A</category>
+<category>Category B</category>
+<description>Event Description</description>
+<enclosure type="image/jpg" url="https://www.xyz.it/image" width="700" height="470"/>
+<pubDate>07/03/2022 17.30 - 07/03/2022 19.00</pubDate>
+</item>
+
+</channel>
+</rss>
+"""
+
 
 def mocked_requests_get(*args, **kwargs):
     class MockResponse:
@@ -136,6 +172,8 @@ def mocked_requests_get(*args, **kwargs):
         raise Timeout
     if args[0] == "http://wrongdate.com/RSS":
         return MockResponse(text=EXAMPLE_FEED_WRONG_DATE_FORMAT, status_code=200)
+    if args[0] == "http://categories.com/RSS":
+        return MockResponse(text=EXAMPLE_FEED_WITH_CATEGORIES, status_code=200)
     return MockResponse(text="Not Found", status_code=404)
 
 
@@ -233,3 +271,16 @@ class RSSSMixerTest(unittest.TestCase):
         }
         res = self.get_feed_data(query=query)
         self.assertEqual(res[0]["date"], "07/03/2022 17.30 - 07/03/2022 19.00")
+
+    @mock.patch("requests.get", side_effect=mocked_requests_get)
+    def test_feed_wrong_date_format(self, mock_get):
+        query = {
+            "feeds": [
+                {
+                    "url": "http://categories.com/RSS",
+                }
+            ]
+        }
+        res = self.get_feed_data(query=query)
+        self.assertEqual(res[0]["categories"], ["Category C"])
+        self.assertEqual(res[1]["categories"], ["Category A", "Category B"])
