@@ -273,7 +273,7 @@ class RSSSMixerTest(unittest.TestCase):
         self.assertEqual(res[0]["date"], "07/03/2022 17.30 - 07/03/2022 19.00")
 
     @mock.patch("requests.get", side_effect=mocked_requests_get)
-    def test_feed_wrong_date_format(self, mock_get):
+    def test_feed_categories(self, mock_get):
         query = {
             "feeds": [
                 {
