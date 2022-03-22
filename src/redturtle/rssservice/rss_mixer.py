@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-from plone.restapi.serializer.converters import json_compatible
 from DateTime import DateTime
 from DateTime.interfaces import SyntaxError
+from plone.dexterity.utils import iterSchemata
+from plone.restapi.serializer.converters import json_compatible
 from plone.restapi.services import Service
 from redturtle.rssservice import _
 from redturtle.rssservice.interfaces import IRSSMixerFeed
@@ -11,12 +12,13 @@ from time import time
 from zExceptions import BadRequest
 from zope.i18n import translate
 from zope.interface import implementer
-from plone.restapi.deserializer import json_body
+from zope.schema import getFields
+
 
 import feedparser
 import requests
 import logging
-
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -28,14 +30,15 @@ ACCEPTED_FEEDPARSER_EXCEPTIONS = (feedparser.CharacterEncodingOverride,)
 FEED_DATA = {}  # url: ({date, title, url, itemlist})
 
 
-class POSTRSSMixerService(Service):
+class RSSMixerService(Service):
     """ """
 
     def reply(self):
-        query = json_body(self.request)
 
-        limit = query.get("limit", 20)
-        feeds = query.get("feeds", [])
+        feed_config = self.get_feed_config()
+
+        limit = feed_config.get("limit", 20)
+        feeds = feed_config.get("feeds", [])
         if not feeds:
             raise BadRequest(
                 translate(
@@ -47,6 +50,67 @@ class POSTRSSMixerService(Service):
                 )
             )
         return self._getFeeds(feeds=feeds, limit=limit)
+
+    def get_feed_config(self):
+        """ """
+        query = self.request.form
+        block_id = query.get("block", "")
+        if not block_id:
+            raise BadRequest(
+                translate(
+                    _(
+                        "missing_block_id",
+                        default="Missing required parameter: block",
+                    ),
+                    context=self.request,
+                )
+            )
+
+        block_data = self.get_block_data(block_id=block_id)
+        if not block_data:
+            raise BadRequest(
+                translate(
+                    _(
+                        "block_not_found",
+                        default='Block with id "{}" not found in this context.'.format(
+                            block_id
+                        ),
+                    ),
+                    context=self.request,
+                )
+            )
+        if block_data.get("@type", "") != "rssBlock":
+            raise BadRequest(
+                translate(
+                    _(
+                        "wrong_block_type",
+                        default='Block with id "{}" is not an RSS block.'.format(
+                            block_id
+                        ),
+                    ),
+                    context=self.request,
+                )
+            )
+        return block_data
+
+    def get_block_data(self, block_id):
+        rss_block = {}
+        if self.context.portal_type == "Plone Site":
+            blocks = json.loads(getattr(self.context, "blocks", "{}"))
+            rss_block = blocks.get(block_id, {})
+        else:
+            rss_block = getattr(self.context, "blocks", {}).get(block_id, {})
+            if not rss_block:
+                # maybe is in some Block field
+                for schema in iterSchemata(self.context):
+                    for name, field in getFields(schema).items():
+                        value = field.get(self.context)
+                        if not value:
+                            continue
+                        if not isinstance(value, dict):
+                            continue
+                        rss_block = value.get("blocks", {}).get(block_id, {})
+        return rss_block
 
     def _getFeeds(self, feeds, limit=20):
         """Return all feeds"""

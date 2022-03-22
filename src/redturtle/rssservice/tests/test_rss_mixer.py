@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from plone import api
 from plone.app.testing import setRoles
 from plone.app.testing import SITE_OWNER_NAME
 from plone.app.testing import SITE_OWNER_PASSWORD
@@ -191,6 +192,52 @@ class RSSSMixerTest(unittest.TestCase):
         self.api_session.headers.update({"Accept": "application/json"})
         self.api_session.auth = (SITE_OWNER_NAME, SITE_OWNER_PASSWORD)
 
+        self.page = api.content.create(
+            type="Document",
+            title="Page",
+            container=self.portal,
+            blocks={
+                "foo": {"@type": "foo"},
+                "rss-block-id-single": {
+                    "@type": "rssBlock",
+                    "limit": 10,
+                    "feeds": [
+                        {"url": "http://foo.com/RSS"},
+                    ],
+                },
+                "rss-block-id": {
+                    "@type": "rssBlock",
+                    "limit": 10,
+                    "feeds": [
+                        {"url": "http://foo.com/RSS"},
+                        {"url": "http://bar.com/RSS"},
+                    ],
+                },
+                "rss-block-id-with-source": {
+                    "@type": "rssBlock",
+                    "limit": 10,
+                    "feeds": [
+                        {"url": "http://foo.com/RSS", "source": "Foo site"},
+                        {"url": "http://bar.com/RSS"},
+                    ],
+                },
+                "rss-block-id-wrong-date": {
+                    "@type": "rssBlock",
+                    "limit": 10,
+                    "feeds": [
+                        {"url": "http://wrongdate.com/RSS"},
+                    ],
+                },
+                "rss-block-id-catagories": {
+                    "@type": "rssBlock",
+                    "limit": 10,
+                    "feeds": [
+                        {"url": "http://categories.com/RSS"},
+                    ],
+                },
+            },
+        )
+
         commit()
 
     def tearDown(self):
@@ -199,45 +246,81 @@ class RSSSMixerTest(unittest.TestCase):
             feed._last_update_time_in_minutes = 0
         self.api_session.close()
 
-    def get_feed_data(self, query):
-        response = self.api_session.post(
-            "/@rss_mixer_data?block_id=rss-block", json=query
+    def get_feed_data(self, block_id):
+        response = self.api_session.get(
+            "{}/@rss_mixer_data?block={}".format(self.page.absolute_url(), block_id)
         )
         return response.json()
 
-    def test_feeds_parameter_is_required(self):
-        response = self.api_session.post("/@rss_mixer_data", json={"foo": "bar"})
+    def test_block_parameter_is_required(self):
+        response = self.api_session.get("/@rss_mixer_data")
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.json()["message"], "Missing required parameter: feeds"
+            response.json()["message"], "Missing required parameter: block"
         )
+
+        response = self.api_session.get("/@rss_mixer_data?foo=bar")
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json()["message"], "Missing required parameter: block"
+        )
+
+    def test_block_parameter_should_be_a_valid_block_in_context(self):
+        response = self.api_session.get("/@rss_mixer_data?block=xxx")
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json()["message"], 'Block with id "xxx" not found in this context.'
+        )
+
+        response = self.api_session.get("/@rss_mixer_data?block=rss-block-id")
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json()["message"],
+            'Block with id "rss-block-id" not found in this context.',
+        )
+
+        response = self.api_session.get(
+            "{}/@rss_mixer_data?block=xxx".format(self.page.absolute_url())
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json()["message"],
+            'Block with id "xxx" not found in this context.',
+        )
+
+        response = self.api_session.get(
+            "{}/@rss_mixer_data?block=rss-block-id".format(self.page.absolute_url())
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_block_parameter_should_be_an_rss_block_in_context(self):
+        response = self.api_session.get(
+            "{}/@rss_mixer_data?block=foo".format(self.page.absolute_url())
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json()["message"],
+            'Block with id "foo" is not an RSS block.',
+        )
+
+        response = self.api_session.get(
+            "{}/@rss_mixer_data?block=rss-block-id".format(self.page.absolute_url())
+        )
+        self.assertEqual(response.status_code, 200)
 
     @mock.patch("requests.get", side_effect=mocked_requests_get)
     def test_feed_single_result(self, mock_get):
-        query = {"feeds": [{"url": "http://foo.com/RSS"}]}
-        res = self.get_feed_data(query=query)
+        res = self.get_feed_data(block_id="rss-block-id-single")
         self.assertEqual(len(res), 2)
 
     @mock.patch("requests.get", side_effect=mocked_requests_get)
     def test_feed_mixed_result(self, mock_get):
-        query = {
-            "feeds": [
-                {"url": "http://foo.com/RSS"},
-                {"url": "http://bar.com/RSS"},
-            ]
-        }
-        res = self.get_feed_data(query=query)
+        res = self.get_feed_data(block_id="rss-block-id")
         self.assertEqual(len(res), 4)
 
     @mock.patch("requests.get", side_effect=mocked_requests_get)
     def test_feed_results_are_sorted_by_date_descending(self, mock_get):
-        query = {
-            "feeds": [
-                {"url": "http://foo.com/RSS"},
-                {"url": "http://bar.com/RSS"},
-            ]
-        }
-        res = self.get_feed_data(query=query)
+        res = self.get_feed_data(block_id="rss-block-id")
 
         self.assertEqual(res[0]["title"], "Foo News 1")
         self.assertEqual(res[1]["title"], "Bar News 1")
@@ -246,14 +329,7 @@ class RSSSMixerTest(unittest.TestCase):
 
     @mock.patch("requests.get", side_effect=mocked_requests_get)
     def test_return_source_info_in_feeds(self, mock_get):
-        query = {
-            "feeds": [
-                {"url": "http://foo.com/RSS", "source": "Foo site"},
-                {"url": "http://bar.com/RSS"},
-            ],
-        }
-
-        res = self.get_feed_data(query=query)
+        res = self.get_feed_data(block_id="rss-block-id-with-source")
 
         self.assertEqual(res[0]["source"], "Foo site")
         self.assertEqual(res[1]["source"], "")
@@ -262,25 +338,11 @@ class RSSSMixerTest(unittest.TestCase):
 
     @mock.patch("requests.get", side_effect=mocked_requests_get)
     def test_feed_wrong_date_format(self, mock_get):
-        query = {
-            "feeds": [
-                {
-                    "url": "http://wrongdate.com/RSS",
-                }
-            ]
-        }
-        res = self.get_feed_data(query=query)
+        res = self.get_feed_data(block_id="rss-block-id-wrong-date")
         self.assertEqual(res[0]["date"], "07/03/2022 17.30 - 07/03/2022 19.00")
 
     @mock.patch("requests.get", side_effect=mocked_requests_get)
     def test_feed_categories(self, mock_get):
-        query = {
-            "feeds": [
-                {
-                    "url": "http://categories.com/RSS",
-                }
-            ]
-        }
-        res = self.get_feed_data(query=query)
+        res = self.get_feed_data(block_id="rss-block-id-catagories")
         self.assertEqual(res[0]["categories"], ["Category C"])
         self.assertEqual(res[1]["categories"], ["Category A", "Category B"])
