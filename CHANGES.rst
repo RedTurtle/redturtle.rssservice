@@ -4,7 +4,8 @@ Changelog
 1.0.3 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Allow to use cateogry in rss feed.
+  [lucabel]
 
 
 1.0.2 (2022-03-04)

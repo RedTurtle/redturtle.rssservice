@@ -215,10 +215,23 @@ class RSSMixerFeed(object):
                 # format needed in blocks to keep compatibility
                 itemdict["enclosure"] = image
 
+            categories = self.get_item_categories(item=item)
+            if categories:
+                itemdict["categories"] = categories
+
             self._items.append(itemdict)
         self._loaded = True
         self._failed = False
         return True
+
+    def get_item_categories(self, item):
+        categories = []
+        if getattr(item, "tags", None):
+            for tag in item["tags"]:
+                term = getattr(tag, "term", None)
+                if term:
+                    categories.append(term)
+        return categories
 
     def get_item_date(self, item):
         if getattr(item, "updated", None):
