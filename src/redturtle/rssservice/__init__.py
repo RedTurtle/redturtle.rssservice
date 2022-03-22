@@ -3,4 +3,4 @@
 from zope.i18nmessageid import MessageFactory
 
 
-_ = MessageFactory('design.plone.rssservice')
+_ = MessageFactory("design.plone.rssservice")

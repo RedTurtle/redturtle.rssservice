@@ -1,16 +1,20 @@
 <configure
     xmlns="http://namespaces.zope.org/zope"
     xmlns:plone="http://namespaces.plone.org/plone"
-    i18n_domain="redturtle.rssservice">
+    i18n_domain="redturtle.rssservice"
+    >
 
-    <include package="plone.restapi" file="configure.zcml"/>
+  <include
+      package="plone.restapi"
+      file="configure.zcml"
+      />
 
-    <plone:service
-        method="GET"
-        name="@rss_mixer_data"
-        for="*"
-        factory=".rss_mixer.RSSMixerService"
-        permission="zope.Public"
-        />
+  <plone:service
+      method="GET"
+      factory=".rss_mixer.RSSMixerService"
+      for="*"
+      permission="zope.Public"
+      name="@rss_mixer_data"
+      />
 
 </configure>
