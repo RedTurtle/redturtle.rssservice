@@ -4,7 +4,10 @@ Changelog
 1.0.4 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Remove unused and unsafe endpoint.
+  [cekk]
+- Now @rss_mixer_data accept GET calls (see README for more infos).
+  [cekk]
 
 
 1.0.3 (2022-03-22)
