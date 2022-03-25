@@ -11,34 +11,22 @@ This package add support to retrieve RSS feeds from external sources.
 Usage
 =====
 
-RSS proxy
----------
-
-There is a service "**@get_rss_feed**" that is used as proxy to call an
-RSS feed from backend and not from frontend to avoid CORS problems.
-
-The service will reply with an "application/rss+xml" response with the desired feed.
-
-Each feed url has a 10 minutes cache for his result to avoid too much requests.
-
-You can call the endpoint passing a *feed* parameter like this example::
-
-    > curl -i http://localhost:8080/Plone/@get_rss_feed?feed=https://www.plone.org/RSS -H 'Accept: application/rss+xml'
-
 
 RSS block
 ---------
 
-There is a service "**@rss_mixer_data**" that accept a list of sources and limit, and return a list of sorted feeds by date.
+There is a service "**@rss_mixer_data**" that accept a block id, and return a list of sorted feeds by date.
 
-This service only accept POST calls and accept following parameters:
+This service only accept GET calls and accept following parameters:
 
-- limit: the number of items to show (default 20)
-- feeds: a list of objects like this: {"url": "url-of-the-feed", "source": "A custom label"}
+- block: the id of the rssBlock with the feeds
+
+The endpoint should be called on the context that has the rssBlock that you want to show.
+
 
 For example::
 
-    > curl -i -X POST http://localhost:8080/Plone/@rss_mixer_data -H 'Accept: application/json' -H 'Content-Type: application/json' --data-raw '{"limit":5, "feeds": [{"url": "url-of-the-feed", "source": "A custom label"}]}'
+    > curl -i -X GET http://localhost:8080/Plone/example-page/@rss_mixer_data?block=123456789 -H 'Accept: application/json' -H 'Content-Type: application/json'
 
 
 Will reply with something like this::

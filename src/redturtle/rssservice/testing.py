@@ -24,7 +24,7 @@ class RedTurtleRSSServiceLayer(PloneSandboxLayer):
         self.loadZCML(package=redturtle.rssservice)
 
     def setUpPloneSite(self, portal):
-        applyProfile(portal, 'plone.restapi:default')
+        applyProfile(portal, "plone.restapi:default")
 
 
 REDTURTLE_RSSSERVICE_FIXTURE = RedTurtleRSSServiceLayer()
@@ -32,13 +32,13 @@ REDTURTLE_RSSSERVICE_FIXTURE = RedTurtleRSSServiceLayer()
 
 REDTURTLE_RSSSERVICE_INTEGRATION_TESTING = IntegrationTesting(
     bases=(REDTURTLE_RSSSERVICE_FIXTURE,),
-    name='RedTurtleRSSServiceLayer:IntegrationTesting',
+    name="RedTurtleRSSServiceLayer:IntegrationTesting",
 )
 
 
 REDTURTLE_RSSSERVICE_FUNCTIONAL_TESTING = FunctionalTesting(
     bases=(REDTURTLE_RSSSERVICE_FIXTURE,),
-    name='RedTurtleRSSServiceLayer:FunctionalTesting',
+    name="RedTurtleRSSServiceLayer:FunctionalTesting",
 )
 
 
@@ -48,7 +48,7 @@ REDTURTLE_RSSSERVICE_ACCEPTANCE_TESTING = FunctionalTesting(
         REMOTE_LIBRARY_BUNDLE_FIXTURE,
         z2.ZSERVER_FIXTURE,
     ),
-    name='RedTurtleRSSServiceLayer:AcceptanceTesting',
+    name="RedTurtleRSSServiceLayer:AcceptanceTesting",
 )
 
 
@@ -65,7 +65,7 @@ class RedTurtleRSSServiceRestApiLayer(PloneRestApiDXLayer):
         self.loadZCML(package=redturtle.rssservice)
 
     def setUpPloneSite(self, portal):
-        applyProfile(portal, 'plone.restapi:default')
+        applyProfile(portal, "plone.restapi:default")
 
 
 REDTURTLE_RSSSERVICE_API_FIXTURE = RedTurtleRSSServiceRestApiLayer()
