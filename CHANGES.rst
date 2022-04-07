@@ -1,7 +1,7 @@
 Changelog
 =========
 
-1.0.4 (unreleased)
+2.0.0 (2022-04-07)
 ------------------
 
 - Remove unused and unsafe endpoint.
