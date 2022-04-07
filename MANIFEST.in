@@ -5,3 +5,4 @@ include *.GPL
 include *.txt
 include *.yml
 global-exclude *.pyc
+exclude .flake8
