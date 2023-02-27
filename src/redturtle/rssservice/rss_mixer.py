@@ -10,15 +10,16 @@ from requests.exceptions import RequestException
 from requests.exceptions import Timeout
 from time import time
 from zExceptions import BadRequest
+from zExceptions import NotFound
 from zope.i18n import translate
 from zope.interface import implementer
 from zope.schema import getFields
 
 
 import feedparser
-import requests
-import logging
 import json
+import logging
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +69,7 @@ class RSSMixerService(Service):
 
         block_data = self.get_block_data(block_id=block_id)
         if not block_data:
-            raise BadRequest(
+            raise NotFound(
                 translate(
                     _(
                         "block_not_found",
@@ -94,22 +95,23 @@ class RSSMixerService(Service):
         return block_data
 
     def get_block_data(self, block_id):
-        rss_block = {}
-        if self.context.portal_type == "Plone Site":
-            blocks = json.loads(getattr(self.context, "blocks", "{}"))
-            rss_block = blocks.get(block_id, {})
-        else:
-            rss_block = getattr(self.context, "blocks", {}).get(block_id, {})
-            if not rss_block:
-                # maybe is in some Block field
-                for schema in iterSchemata(self.context):
-                    for name, field in getFields(schema).items():
-                        value = field.get(self.context)
-                        if not value:
-                            continue
-                        if not isinstance(value, dict):
-                            continue
-                        rss_block = value.get("blocks", {}).get(block_id, {})
+        blocks = getattr(self.context, "blocks", {})
+        if not blocks:
+            return {}
+        if not isinstance(blocks, dict):
+            # plone < 6 support
+            blocks = json.loads(blocks)
+        rss_block = blocks.get(block_id, {})
+        if not rss_block:
+            # maybe is in some Block field
+            for schema in iterSchemata(self.context):
+                for name, field in getFields(schema).items():
+                    value = field.get(self.context)
+                    if not value:
+                        continue
+                    if not isinstance(value, dict):
+                        continue
+                    rss_block = value.get("blocks", {}).get(block_id, {})
         return rss_block
 
     def _getFeeds(self, feeds, limit=20):
