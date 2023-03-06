@@ -179,7 +179,6 @@ def mocked_requests_get(*args, **kwargs):
 
 
 class RSSSMixerTest(unittest.TestCase):
-
     layer = REDTURTLE_RSSSERVICE_API_FUNCTIONAL_TESTING
 
     def setUp(self):

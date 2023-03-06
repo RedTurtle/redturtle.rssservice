@@ -13,7 +13,6 @@ import plone.restapi
 
 
 class RedTurtleRSSServiceLayer(PloneSandboxLayer):
-
     defaultBases = (PLONE_APP_CONTENTTYPES_FIXTURE,)
 
     def setUpZope(self, app, configurationContext):
@@ -53,7 +52,6 @@ REDTURTLE_RSSSERVICE_ACCEPTANCE_TESTING = FunctionalTesting(
 
 
 class RedTurtleRSSServiceRestApiLayer(PloneRestApiDXLayer):
-
     defaultBases = (PLONE_APP_CONTENTTYPES_FIXTURE,)
 
     def setUpZope(self, app, configurationContext):
