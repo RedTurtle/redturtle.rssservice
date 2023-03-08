@@ -4,6 +4,8 @@ Changelog
 2.0.1 (unreleased)
 ------------------
 
+- Customizable timeout.
+  [cekk]
 - Return 404 if block not found instead BadRequest.
   [cekk]
 - Handle site root blocks in plone 6.

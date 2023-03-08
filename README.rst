@@ -88,6 +88,13 @@ Will reply with something like this::
 
 This endpoint works with `volto-rss-block <https://github.com/RedTurtle/volto-rss-block/>`_ plugin.
 
+Retrieve timeout
+----------------
+
+There is a 5s default timeout for retrieve RSS feeds.
+
+You can override it with an environment variable: **RSS_SERVICE_TIMEOUT**
+
 Installation
 ============
 
