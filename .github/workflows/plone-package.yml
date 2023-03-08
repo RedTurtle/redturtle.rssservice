@@ -3,6 +3,7 @@
 
 name: Plone package
 
+on: [push]
 jobs:
     build:
         runs-on: ubuntu-latest
