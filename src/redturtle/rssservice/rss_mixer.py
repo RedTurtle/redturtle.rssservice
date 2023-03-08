@@ -38,7 +38,6 @@ class RSSMixerService(Service):
     """ """
 
     def reply(self):
-
         feed_config = self.get_feed_config()
 
         limit = feed_config.get("limit", 20)
