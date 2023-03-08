@@ -28,7 +28,10 @@ jobs:
     - name: Pip cache
       uses: actions/cache@v3
       with:
-        path: ~/.cache/pip
+        path: |
+          ~/.cache/pip
+          ~/buildout-cache
+          ~/extends
         key: ${{ runner.os }}-pip-${{ matrix.config[0] }}-${{ hashFiles('setup.*', 'tox.ini') }}
         restore-keys: |
           ${{ runner.os }}-pip-${{ matrix.config[0] }}-
