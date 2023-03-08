@@ -2,6 +2,30 @@
    If you want to learn more about writing documentation, please check out: http://docs.plone.org/about/documentation_styleguide.html
    This text does not appear on pypi or github. It is a comment.
 
+.. image:: https://img.shields.io/pypi/v/redturtle.rssservice.svg
+    :target: https://pypi.org/project/redturtle.rssservice/
+    :alt: Latest Version
+
+.. image:: https://img.shields.io/pypi/pyversions/redturtle.rssservice.svg?style=plastic
+    :target: https://pypi.org/project/redturtle.rssservice/
+    :alt: Supported - Python Versions
+
+.. image:: https://img.shields.io/pypi/dm/redturtle.rssservice.svg
+    :target: https://pypi.org/project/redturtle.rssservice/
+    :alt: Number of PyPI downloads
+
+.. image:: https://img.shields.io/pypi/l/redturtle.rssservice.svg
+    :target: https://pypi.org/project/redturtle.rssservice/
+    :alt: License
+
+.. image:: https://github.com/collective/redturtle.rssservice/actions/workflows/tests.yml/badge.svg
+    :target: https://github.com/collective/redturtle.rssservice/actions
+    :alt: Tests
+
+.. image:: https://coveralls.io/repos/github/collective/redturtle.rssservice/badge.svg?branch=master
+    :target: https://coveralls.io/github/collective/redturtle.rssservice?branch=master
+    :alt: Coverage
+
 =====================
 Redturtle RSS Service
 =====================
