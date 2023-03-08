@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from DateTime import DateTime
 from DateTime.interfaces import SyntaxError
+from os import environ
 from plone.dexterity.utils import iterSchemata
 from plone.restapi.serializer.converters import json_compatible
 from plone.restapi.services import Service
@@ -22,12 +23,15 @@ import json
 
 logger = logging.getLogger(__name__)
 
+
 # Accept these bozo_exceptions encountered by feedparser when parsing
 # the feed:
 ACCEPTED_FEEDPARSER_EXCEPTIONS = (feedparser.CharacterEncodingOverride,)
 
 # store the feeds here (which means in RAM)
 FEED_DATA = {}  # url: ({date, title, url, itemlist})
+
+REQUESTS_TIMEOUT = int(environ.get("RSS_SERVICE_TIMEOUT", "5")) or 5
 
 
 class RSSMixerService(Service):
@@ -222,7 +226,7 @@ class RSSMixerFeed(object):
         In this way, we can manage timeouts.
         """
         try:
-            response = requests.get(url, timeout=5)
+            response = requests.get(url, timeout=REQUESTS_TIMEOUT)
         except (Timeout, RequestException) as e:
             logger.exception(e)
             return None

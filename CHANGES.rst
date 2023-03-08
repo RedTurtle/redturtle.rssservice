@@ -4,7 +4,8 @@ Changelog
 2.0.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Customizable timeout.
+  [cekk]
 
 
 2.0.0 (2022-04-07)
