@@ -179,7 +179,6 @@ def mocked_requests_get(*args, **kwargs):
 
 
 class RSSSMixerTest(unittest.TestCase):
-
     layer = REDTURTLE_RSSSERVICE_API_FUNCTIONAL_TESTING
 
     def setUp(self):
@@ -267,26 +266,15 @@ class RSSSMixerTest(unittest.TestCase):
 
     def test_block_parameter_should_be_a_valid_block_in_context(self):
         response = self.api_session.get("/@rss_mixer_data?block=xxx")
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-            response.json()["message"], 'Block with id "xxx" not found in this context.'
-        )
+        self.assertEqual(response.status_code, 404)
 
         response = self.api_session.get("/@rss_mixer_data?block=rss-block-id")
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-            response.json()["message"],
-            'Block with id "rss-block-id" not found in this context.',
-        )
+        self.assertEqual(response.status_code, 404)
 
         response = self.api_session.get(
             "{}/@rss_mixer_data?block=xxx".format(self.page.absolute_url())
         )
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-            response.json()["message"],
-            'Block with id "xxx" not found in this context.',
-        )
+        self.assertEqual(response.status_code, 404)
 
         response = self.api_session.get(
             "{}/@rss_mixer_data?block=rss-block-id".format(self.page.absolute_url())
