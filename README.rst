@@ -18,7 +18,7 @@
     :target: https://pypi.org/project/redturtle.rssservice/
     :alt: License
 
-.. image:: https://github.com/RedTurtle/redturtle.rssservice/actions/workflows/tests.yml/badge.svg
+.. image:: https://github.com/RedTurtle/redturtle.rssservice/actions/workflows/test.yml/badge.svg
     :target: https://github.com/RedTurtle/redturtle.rssservice/actions
     :alt: Tests
 
