@@ -18,11 +18,11 @@
     :target: https://pypi.org/project/redturtle.rssservice/
     :alt: License
 
-.. image:: https://github.com/collective/redturtle.rssservice/actions/workflows/tests.yml/badge.svg
+.. image:: https://github.com/RedTurtle/redturtle.rssservice/actions/workflows/tests.yml/badge.svg
     :target: https://github.com/RedTurtle/redturtle.rssservice/actions
     :alt: Tests
 
-.. image:: https://coveralls.io/repos/github/collective/redturtle.rssservice/badge.svg?branch=master
+.. image:: https://coveralls.io/repos/github/RedTurtle/redturtle.rssservice/badge.svg?branch=master
     :target: https://coveralls.io/github/RedTurtle/redturtle.rssservice?branch=master
     :alt: Coverage
 
