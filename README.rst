@@ -19,11 +19,11 @@
     :alt: License
 
 .. image:: https://github.com/collective/redturtle.rssservice/actions/workflows/tests.yml/badge.svg
-    :target: https://github.com/collective/redturtle.rssservice/actions
+    :target: https://github.com/RedTurtle/redturtle.rssservice/actions
     :alt: Tests
 
 .. image:: https://coveralls.io/repos/github/collective/redturtle.rssservice/badge.svg?branch=master
-    :target: https://coveralls.io/github/collective/redturtle.rssservice?branch=master
+    :target: https://coveralls.io/github/RedTurtle/redturtle.rssservice?branch=master
     :alt: Coverage
 
 =====================
