@@ -6,3 +6,4 @@ include *.txt
 include *.yml
 global-exclude *.pyc
 exclude .flake8
+exclude tox.ini
