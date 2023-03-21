@@ -1,7 +1,7 @@
 Changelog
 =========
 
-2.2.0 (unreleased)
+2.2.0 (2023-03-21)
 ------------------
 
 - Allow configuring the User-Agent for the requests to get feeds,
