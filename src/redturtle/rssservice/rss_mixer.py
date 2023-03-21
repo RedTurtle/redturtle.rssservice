@@ -33,6 +33,7 @@ ACCEPTED_FEEDPARSER_EXCEPTIONS = (feedparser.CharacterEncodingOverride,)
 FEED_DATA = {}  # url: ({date, title, url, itemlist})
 
 REQUESTS_TIMEOUT = int(environ.get("RSS_SERVICE_TIMEOUT", "5")) or 5
+REQUESTS_USER_AGENT = environ.get("RSS_USER_AGENT")
 
 
 class RSSMixerService(Service):
@@ -226,8 +227,15 @@ class RSSMixerFeed(object):
         Use urllib to retrieve an rss feed.
         In this way, we can manage timeouts.
         """
+        headers = {}
+        if REQUESTS_USER_AGENT:
+            headers["User-Agent"] = REQUESTS_USER_AGENT
         try:
-            response = requests.get(url, timeout=REQUESTS_TIMEOUT)
+            response = requests.get(
+                url,
+                headers=headers,
+                timeout=REQUESTS_TIMEOUT,
+            )
         except (Timeout, RequestException) as e:
             logger.exception(e)
             return None

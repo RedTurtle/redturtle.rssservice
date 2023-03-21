@@ -95,6 +95,11 @@ There is a 5s default timeout for retrieve RSS feeds.
 
 You can override it with an environment variable: **RSS_SERVICE_TIMEOUT**
 
+Set User-Agent
+--------------
+
+You can override the default ``User-Agent`` for the requests to get feeds by setting an environment variable: **RSS_USER_AGENT**
+
 Installation
 ============
 

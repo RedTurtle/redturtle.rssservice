@@ -1,10 +1,12 @@
 Changelog
 =========
 
-2.1.1 (unreleased)
+2.2.0 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Allow configuring the User-Agent for the requests to get feeds,
+  via the REQUESTS_USER_AGENT environment variable.
+  [davisagli]
 
 
 2.1.0 (2023-03-10)
