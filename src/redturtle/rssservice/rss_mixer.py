@@ -238,7 +238,7 @@ class RSSMixerFeed(object):
                 timeout=REQUESTS_TIMEOUT,
             )
         except (Timeout, RequestException) as e:
-            logger.warning(e)
+            logger.warning("exception %s during %s request", e, url)
             return None
         if response.status_code != 200:
             message = response.text or response.reason
