@@ -4,8 +4,10 @@ Changelog
 2.2.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
-
+- Handle case when feed url is an internal url with resolveuid.
+  [cekk]
+- Do not print exception on log, but use warning because it's handled.
+  [cekk]
 
 2.2.0 (2023-03-21)
 ------------------
