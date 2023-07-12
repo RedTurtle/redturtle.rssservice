@@ -1,7 +1,7 @@
 Changelog
 =========
 
-2.2.1 (unreleased)
+2.2.1 (2023-07-12)
 ------------------
 
 - Handle case when feed url is an internal url with resolveuid.
