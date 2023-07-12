@@ -4,6 +4,7 @@ from DateTime.interfaces import SyntaxError
 from os import environ
 from plone.dexterity.utils import iterSchemata
 from plone.restapi.serializer.converters import json_compatible
+from plone.restapi.serializer.utils import uid_to_url
 from plone.restapi.services import Service
 from redturtle.rssservice import _
 from redturtle.rssservice.interfaces import IRSSMixerFeed
@@ -15,7 +16,6 @@ from zExceptions import NotFound
 from zope.i18n import translate
 from zope.interface import implementer
 from zope.schema import getFields
-
 
 import feedparser
 import json
@@ -227,6 +227,7 @@ class RSSMixerFeed(object):
         Use urllib to retrieve an rss feed.
         In this way, we can manage timeouts.
         """
+        url = uid_to_url(url)
         headers = {}
         if REQUESTS_USER_AGENT:
             headers["User-Agent"] = REQUESTS_USER_AGENT
@@ -237,7 +238,7 @@ class RSSMixerFeed(object):
                 timeout=REQUESTS_TIMEOUT,
             )
         except (Timeout, RequestException) as e:
-            logger.exception(e)
+            logger.warning("exception %s during %s request", e, url)
             return None
         if response.status_code != 200:
             message = response.text or response.reason
