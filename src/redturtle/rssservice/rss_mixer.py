@@ -232,7 +232,7 @@ class RSSMixerFeed(object):
         headers = {}
         if REQUESTS_USER_AGENT:
             headers["User-Agent"] = REQUESTS_USER_AGENT
-        try: 
+        try:
             if RSSMIXER_HTTP_PROXY:
                 url = f"{RSSMIXER_HTTP_PROXY}/{url}"
             response = requests.get(
