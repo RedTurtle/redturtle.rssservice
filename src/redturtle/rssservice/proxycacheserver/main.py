@@ -57,6 +57,7 @@ import hashlib
 import http.server
 import json
 import os
+import re
 import requests
 import socketserver
 import threading
@@ -91,8 +92,10 @@ def fetch_and_cache(url, cache_dir, client_headers=None, timeout=(1, 10)):
             headers["User-Agent"] = "RSSMixerProxy/1.0"
         if "Host" in headers:
             del headers["Host"]
-        response = requests.get(url, headers=headers, timeout=timeout)
-
+        if re.match(r"^https?:\/\/", url):
+            response = requests.get(url, headers=headers, timeout=timeout)
+        else:
+            raise TypeError("Invalid url")
         # Store the response in the cache
         if response.status_code == 200:
             cache_content = {
