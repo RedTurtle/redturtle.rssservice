@@ -93,7 +93,7 @@ def fetch_and_cache(url, cache_dir, client_headers=None, timeout=(1, 10)):
         if "Host" in headers:
             del headers["Host"]
         # Validate the URL
-        if not re.match(r'^https?:\/\/', url):
+        if not re.match(r"^https?:\/\/", url):
             raise ValueError(f"Invalid URL path: {url}")
         response = requests.get(url, headers=headers, timeout=timeout)
         # Store the response in the cache
