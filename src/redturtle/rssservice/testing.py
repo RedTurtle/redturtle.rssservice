@@ -8,8 +8,8 @@ from plone.app.testing import PloneSandboxLayer
 from plone.restapi.testing import PloneRestApiDXLayer
 from plone.testing import z2
 
-import redturtle.rssservice
 import plone.restapi
+import redturtle.rssservice
 
 
 class RedTurtleRSSServiceLayer(PloneSandboxLayer):

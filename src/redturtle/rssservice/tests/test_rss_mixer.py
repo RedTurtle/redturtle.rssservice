@@ -6,14 +6,13 @@ from plone.app.testing import SITE_OWNER_PASSWORD
 from plone.app.testing import TEST_USER_ID
 from plone.restapi.testing import RelativeSession
 from redturtle.rssservice.rss_mixer import FEED_DATA
-from redturtle.rssservice.testing import (
-    REDTURTLE_RSSSERVICE_API_FUNCTIONAL_TESTING,
-)
+from redturtle.rssservice.testing import REDTURTLE_RSSSERVICE_API_FUNCTIONAL_TESTING
 from requests.exceptions import Timeout
 from transaction import commit
 from unittest import mock
 
 import unittest
+
 
 EXAMPLE_FEED_FOO = """
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
