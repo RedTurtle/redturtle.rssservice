@@ -115,6 +115,22 @@ Install redturtle.rssservice by adding it to your buildout::
 
 and then running ``bin/buildout``
 
+Resilience
+==========
+
+To make the product more resilient against external feed disruptions, it is possible to use an external proxy/cache service. The service is utilized in the following format:
+
+```
+http://proxyservice/http://feedurl
+```
+
+The product includes a built-in proxy/cache implementation that can be used. After installing the product, you can use it by running the following process:
+
+```
+bin/rssmixer-proxy --port 8000 --ttl 1200
+```
+
+And eventually set the environment variable `RSSMIXER_PROXY` to `http://127.0.0.1:8000` according to the port used for the proxy.
 
 Contribute
 ==========

@@ -22,6 +22,7 @@ import json
 import logging
 import requests
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -34,6 +35,7 @@ FEED_DATA = {}  # url: ({date, title, url, itemlist})
 
 REQUESTS_TIMEOUT = int(environ.get("RSS_SERVICE_TIMEOUT", "5")) or 5
 REQUESTS_USER_AGENT = environ.get("RSS_USER_AGENT")
+RSSMIXER_HTTP_PROXY = environ.get("RSSMIXER_PROXY", "")
 
 
 class RSSMixerService(Service):
@@ -232,6 +234,8 @@ class RSSMixerFeed(object):
         if REQUESTS_USER_AGENT:
             headers["User-Agent"] = REQUESTS_USER_AGENT
         try:
+            if RSSMIXER_HTTP_PROXY:
+                url = f"{RSSMIXER_HTTP_PROXY}/{url}"
             response = requests.get(
                 url,
                 headers=headers,
