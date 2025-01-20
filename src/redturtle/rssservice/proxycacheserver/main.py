@@ -123,9 +123,9 @@ def fetch_and_cache(url, cache_dir, client_headers=None, timeout=(1, 10)):
             # TODO: update file only if changed ?
             with open(cache_file, "w", encoding="utf-8") as f:
                 json.dump(cache_content, f, indent=2)
-            logger.info(f"Cached {response.status_code}: {url} in {cache_dir}")
+            logger.info("Cached %s: %s in %s", response.status_code, url, cache_dir)
         else:
-            logger.error(f"Failed to fetch {url}: {response.status_code}")
+            logger.error("Failed to fetch $s: %s", url, response.status_code)
             cache_content = {
                 "url": url,
                 "request_headers": headers,
@@ -137,10 +137,10 @@ def fetch_and_cache(url, cache_dir, client_headers=None, timeout=(1, 10)):
                 with open(cache_file, "w", encoding="utf-8") as f:
                     json.dump(cache_content, f, indent=2)
                 logger.info(
-                    f"Cached error {response.status_code}: {url} in {cache_dir}"
+                    "Cached error %s: %s in %s", response.status_code, url, cache_dir
                 )
     except Exception as e:
-        logger.error(f"Error fetching {url}: {e}")
+        logger.error("Error fetching %s: %s", url, e)
         cache_content = {
             "url": url,
             "request_headers": headers,
@@ -151,7 +151,7 @@ def fetch_and_cache(url, cache_dir, client_headers=None, timeout=(1, 10)):
         if not os.path.exists(cache_file):
             with open(cache_file, "w", encoding="utf-8") as f:
                 json.dump(cache_content, f, indent=2)
-            logger.info(f"Cached error: {url} in {cache_dir}")
+            logger.info("Cached error: %s in %s", url, cache_dir)
     return cache_content
 
 
@@ -167,9 +167,9 @@ def refresh_cache(url, cache_dir, ttl):
                 cache_file = cache_path(url, cache_dir)
                 if os.path.exists(cache_file):
                     os.remove(cache_file)
-                logger.warning(f"Remove {url} from cached files")
+                logger.warning("Remove %s from cached files", url)
                 return
-        logger.info(f"Refresh cache for {url}")
+        logger.info("Refresh cache for %s", url)
         fetch_and_cache(url, cache_dir)
 
 
@@ -184,10 +184,10 @@ def load_urls_from_cache(cache_dir):
                 data = json.load(open(hash_file, "r", encoding="utf-8"))
                 url = data.get("url", "")
                 if url:
-                    logger.info(f"Load: {url} from cache {hash_file}")
+                    logger.info("Load: %s from cache %s", url, hash_file)
                     urls.append(url)
             except Exception as e:
-                logger.info(f"Error reading cached file {file}: {e}")
+                logger.info("Error reading cached file %s: %s", file, e)
     return urls
 
 
@@ -200,6 +200,7 @@ class CachingProxyHandler(http.server.BaseHTTPRequestHandler):
 
     def do_GET(self):
 
+        url = self.path.lstrip("/")
         url = (
             self.path[1:] if self.path.startswith("/") else self.path
         )  # Remove leading slash
@@ -208,11 +209,11 @@ class CachingProxyHandler(http.server.BaseHTTPRequestHandler):
 
         # Check if the page is already cached
         if os.path.exists(cache_file):
-            logger.info(f"Serving from cache: {url}")
+            logger.info("Serving from cache: %s", url)
             with open(cache_file, "r", encoding="utf-8") as f:
                 cache_content = json.load(f)
         else:
-            logger.info(f"Fetching and caching: {url}")
+            logger.info("Fetching and caching: %s", url)
             client_headers = dict(self.headers)
             cache_content = fetch_and_cache(url, self.cache_dir, client_headers)
             threading.Thread(
@@ -241,7 +242,7 @@ def start_server(host, port, cache_dir, ttl):
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer((host, port), handler) as httpd:
         try:
-            logger.info(f"Serving on http://{host}:{port}")
+            logger.info("Serving on http://%s:%s", host, port)
             httpd.serve_forever()
         finally:
             logger.info("Closing connection")
