@@ -200,10 +200,7 @@ class CachingProxyHandler(http.server.BaseHTTPRequestHandler):
 
     def do_GET(self):
 
-        url = self.path.lstrip("/")
-        url = (
-            self.path[1:] if self.path.startswith("/") else self.path
-        )  # Remove leading slash
+        url = self.path.lstrip("/").replace("\n").replace("\r")
         LAST_ACCESS_TIMES[url] = time.time()
         cache_file = cache_path(url, self.cache_dir)
 
