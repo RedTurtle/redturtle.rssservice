@@ -56,12 +56,27 @@ import click
 import hashlib
 import http.server
 import json
+import logging
 import os
 import re
 import requests
 import socketserver
 import threading
 import time
+
+
+# this is not thtread-safe, but we don't care about it !
+LAST_ACCESS_TIMES = {}
+MAX_TTL_IN_CACHE = 7 * 24 * 3600  # 1 week
+
+logger = logging.getLogger("rssmixer-proxy")
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+)
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
 
 
 # Function to calculate cache file path based on URL
@@ -105,11 +120,12 @@ def fetch_and_cache(url, cache_dir, client_headers=None, timeout=(1, 10)):
                 "status_code": response.status_code,
                 "body": response.text,
             }
+            # TODO: update file only if changed ?
             with open(cache_file, "w", encoding="utf-8") as f:
                 json.dump(cache_content, f, indent=2)
-            print(f"Cached: {url} in {cache_dir}")
+            logger.info(f"Cached {response.status_code}: {url} in {cache_dir}")
         else:
-            print(f"Failed to fetch {url}: {response.status_code}")
+            logger.error(f"Failed to fetch {url}: {response.status_code}")
             cache_content = {
                 "url": url,
                 "request_headers": headers,
@@ -120,9 +136,11 @@ def fetch_and_cache(url, cache_dir, client_headers=None, timeout=(1, 10)):
             if not os.path.exists(cache_file):
                 with open(cache_file, "w", encoding="utf-8") as f:
                     json.dump(cache_content, f, indent=2)
-            print(f"Cached error: {url} in {cache_dir}")
+                logger.info(
+                    f"Cached error {response.status_code}: {url} in {cache_dir}"
+                )
     except Exception as e:
-        print(f"Error fetching {url}: {e}")
+        logger.error(f"Error fetching {url}: {e}")
         cache_content = {
             "url": url,
             "request_headers": headers,
@@ -133,15 +151,25 @@ def fetch_and_cache(url, cache_dir, client_headers=None, timeout=(1, 10)):
         if not os.path.exists(cache_file):
             with open(cache_file, "w", encoding="utf-8") as f:
                 json.dump(cache_content, f, indent=2)
-        print(f"Cached error: {url} in {cache_dir}")
+            logger.info(f"Cached error: {url} in {cache_dir}")
     return cache_content
 
 
 # Background thread to refresh cache
 def refresh_cache(url, cache_dir, ttl):
-    print(f"Refresh cache for {url} every {ttl} seconds")
+    logger.info(f"Refresh cache for {url} every {ttl} seconds")
     while True:
         time.sleep(ttl)
+        if url not in LAST_ACCESS_TIMES:
+            LAST_ACCESS_TIMES[url] = time.time()
+        else:
+            if LAST_ACCESS_TIMES[url] + MAX_TTL_IN_CACHE < time.time():
+                cache_file = cache_path(url, cache_dir)
+                if os.path.exists(cache_file):
+                    os.remove(cache_file)
+                logger.warning(f"Remove {url} from cached files")
+                return
+        logger.info(f"Refresh cache for {url}")
         fetch_and_cache(url, cache_dir)
 
 
@@ -156,17 +184,18 @@ def load_urls_from_cache(cache_dir):
                 data = json.load(open(hash_file, "r", encoding="utf-8"))
                 url = data.get("url", "")
                 if url:
-                    print(f"Load: {url} from cache {hash_file}")
+                    logger.info(f"Load: {url} from cache {hash_file}")
                     urls.append(url)
             except Exception as e:
-                print(f"Error reading cached file {file}: {e}")
+                logger.info(f"Error reading cached file {file}: {e}")
     return urls
 
 
 # HTTP proxy handler
 class CachingProxyHandler(http.server.BaseHTTPRequestHandler):
-    def __init__(self, *args, cache_dir=None, **kwargs):
+    def __init__(self, *args, cache_dir=None, ttl=None, **kwargs):
         self.cache_dir = cache_dir
+        self.ttl = ttl
         super().__init__(*args, **kwargs)
 
     def do_GET(self):
@@ -174,17 +203,21 @@ class CachingProxyHandler(http.server.BaseHTTPRequestHandler):
         url = (
             self.path[1:] if self.path.startswith("/") else self.path
         )  # Remove leading slash
+        LAST_ACCESS_TIMES[url] = time.time()
         cache_file = cache_path(url, self.cache_dir)
 
         # Check if the page is already cached
         if os.path.exists(cache_file):
-            print(f"Serving from cache: {url}")
+            logger.info(f"Serving from cache: {url}")
             with open(cache_file, "r", encoding="utf-8") as f:
                 cache_content = json.load(f)
         else:
-            print(f"Fetching and caching: {url}")
+            logger.info(f"Fetching and caching: {url}")
             client_headers = dict(self.headers)
             cache_content = fetch_and_cache(url, self.cache_dir, client_headers)
+            threading.Thread(
+                target=refresh_cache, args=(url, self.cache_dir, self.ttl), daemon=True
+            ).start()
 
         # Send response
         self.send_response(cache_content["status_code"])
@@ -194,24 +227,24 @@ class CachingProxyHandler(http.server.BaseHTTPRequestHandler):
             if header.lower() in ("content-type", "cache-control"):
                 self.send_header(header, value)
                 continue
-            # print("skip header", header, value)
+            # logger.info("skip header", header, value)
         self.send_header("Content-Length", len(cache_content["body"].encode("utf-8")))
         self.end_headers()
         self.wfile.write(cache_content["body"].encode("utf-8"))
 
 
 # Start the server
-def start_server(host, port, cache_dir):
+def start_server(host, port, cache_dir, ttl):
     def handler(*args, **kwargs):
-        return CachingProxyHandler(*args, cache_dir=cache_dir, **kwargs)
+        return CachingProxyHandler(*args, cache_dir=cache_dir, ttl=ttl, **kwargs)
 
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer((host, port), handler) as httpd:
         try:
-            print(f"Serving on http://{host}:{port}")
+            logger.info(f"Serving on http://{host}:{port}")
             httpd.serve_forever()
         finally:
-            print("Closing connection", httpd)
+            logger.info("Closing connection")
             httpd.shutdown()
             # con.shutdown(socket.SHUT_RDWR)
             # httpd.close()
@@ -237,11 +270,11 @@ def main(host, port, cache_dir, ttl):
             ).start()
 
         # Start the proxy server
-        start_server(host, port, cache_dir)
+        start_server(host, port, cache_dir, ttl)
     except KeyboardInterrupt:
-        print("Server stopped.")
+        logger.info("Server stopped.")
     finally:
-        print("Closing connection")
+        logger.info("Closing connection")
 
 
 if __name__ == "__main__":
