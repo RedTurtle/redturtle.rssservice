@@ -65,7 +65,6 @@ import threading
 import time
 from urllib.parse import urlparse
 
-
 LOCK = threading.Lock()
 LAST_ACCESS_TIMES = {}
 ACTIVE_REFRESH_THREADS = set()
@@ -270,7 +269,12 @@ class CachingProxyHandler(http.server.BaseHTTPRequestHandler):
             header_lower = header.lower()
             if header_lower in ("set-cookie", "content-length"):
                 continue
-            if header_lower in ("content-type", "cache-control", "etag", "last-modified"):
+            if header_lower in (
+                "content-type",
+                "cache-control",
+                "etag",
+                "last-modified",
+            ):
                 self.send_header(header, value)
 
         self.send_header("Content-Length", str(len(body_bytes)))

@@ -22,7 +22,6 @@ import json
 import logging
 import requests
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -64,7 +63,7 @@ class RSSMixerService(Service):
         query = self.request.form
         if DEBUGMODE and query.get("rss_debug_uri"):
             return {"feeds": [{"url": query.get("rss_debug_uri")}]}
-        
+
         block_id = query.get("block", "")
         if not block_id:
             raise BadRequest(
