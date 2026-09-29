@@ -4,7 +4,8 @@ Changelog
 2.2.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Fix proxycache url replace
+  [mamico]
 
 
 2.2.1 (2023-07-12)
