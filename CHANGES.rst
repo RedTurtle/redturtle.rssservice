@@ -4,7 +4,10 @@ Changelog
 2.2.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Fix proxycache url replace
+  [mamico]
+- Refactor proxycache server: thread-safety, atomic writes, background thread deduplication, ThreadingHTTPServer, and anti-SSRF URL validation.
+  [mamico]
 
 
 2.2.1 (2023-07-12)

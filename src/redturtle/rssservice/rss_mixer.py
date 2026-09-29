@@ -16,12 +16,11 @@ from zExceptions import NotFound
 from zope.i18n import translate
 from zope.interface import implementer
 from zope.schema import getFields
-
+from App.config import getConfiguration
 import feedparser
 import json
 import logging
 import requests
-
 
 logger = logging.getLogger(__name__)
 
@@ -37,13 +36,14 @@ REQUESTS_TIMEOUT = int(environ.get("RSS_SERVICE_TIMEOUT", "5")) or 5
 REQUESTS_USER_AGENT = environ.get("RSS_USER_AGENT")
 RSSMIXER_HTTP_PROXY = environ.get("RSSMIXER_PROXY", "")
 
+DEBUGMODE = getConfiguration().debug_mode
+
 
 class RSSMixerService(Service):
     """ """
 
     def reply(self):
         feed_config = self.get_feed_config()
-
         limit = feed_config.get("limit", 20)
         feeds = feed_config.get("feeds", [])
         if not feeds:
@@ -61,6 +61,9 @@ class RSSMixerService(Service):
     def get_feed_config(self):
         """ """
         query = self.request.form
+        if DEBUGMODE and query.get("rss_debug_uri"):
+            return {"feeds": [{"url": query.get("rss_debug_uri")}]}
+
         block_id = query.get("block", "")
         if not block_id:
             raise BadRequest(
