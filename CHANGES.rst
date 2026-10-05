@@ -1,7 +1,7 @@
 Changelog
 =========
 
-2.2.2 (unreleased)
+2.2.2 (2026-10-05)
 ------------------
 
 - Fix proxycache url replace
