@@ -4,7 +4,9 @@ Changelog
 2.2.3 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Fix feed cache: ``needs_update`` compared minutes with tenths of minutes,
+  so feeds were re-downloaded on every request.
+  [deodorhunter]
 
 
 2.2.2 (2026-10-05)
