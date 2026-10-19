@@ -6,6 +6,7 @@ from plone.app.testing import SITE_OWNER_PASSWORD
 from plone.app.testing import TEST_USER_ID
 from plone.restapi.testing import RelativeSession
 from redturtle.rssservice.rss_mixer import FEED_DATA
+from redturtle.rssservice.rss_mixer import RSSMixerFeed
 from redturtle.rssservice.testing import REDTURTLE_RSSSERVICE_API_FUNCTIONAL_TESTING
 from requests.exceptions import Timeout
 from transaction import commit
@@ -332,3 +333,50 @@ class RSSSMixerTest(unittest.TestCase):
         res = self.get_feed_data(block_id="rss-block-id-catagories")
         self.assertEqual(res[0]["categories"], ["Category C"])
         self.assertEqual(res[1]["categories"], ["Category A", "Category B"])
+
+    @mock.patch("requests.get", side_effect=mocked_requests_get)
+    def test_feeds_are_cached_between_requests(self, mock_get):
+        self.get_feed_data(block_id="rss-block-id")
+        self.get_feed_data(block_id="rss-block-id")
+
+        called_urls = [call.args[0] for call in mock_get.call_args_list]
+        self.assertEqual(called_urls.count("http://foo.com/RSS"), 1)
+        self.assertEqual(called_urls.count("http://bar.com/RSS"), 1)
+
+
+class RSSMixerFeedCacheTest(unittest.TestCase):
+    """needs_update must honour the feed timeout (expressed in minutes)."""
+
+    NOW = 1_750_000_000.0  # fixed epoch seconds
+
+    @mock.patch("requests.get", side_effect=mocked_requests_get)
+    def test_needs_update_respects_timeout(self, mock_get):
+        feed = RSSMixerFeed(url="http://foo.com/RSS", source="", timeout=100)
+        with mock.patch("redturtle.rssservice.rss_mixer.time") as mock_time:
+            mock_time.return_value = self.NOW
+            self.assertTrue(feed.update())
+            self.assertTrue(feed.ok)
+            # just retrieved: no update needed
+            self.assertFalse(feed.needs_update)
+
+            # still inside the timeout window
+            mock_time.return_value = self.NOW + 99 * 60
+            self.assertFalse(feed.needs_update)
+
+            # timeout (100 minutes) expired
+            mock_time.return_value = self.NOW + 101 * 60
+            self.assertTrue(feed.needs_update)
+
+    @mock.patch("requests.get", side_effect=mocked_requests_get)
+    def test_update_does_not_refetch_within_timeout(self, mock_get):
+        feed = RSSMixerFeed(url="http://foo.com/RSS", source="", timeout=100)
+        with mock.patch("redturtle.rssservice.rss_mixer.time") as mock_time:
+            mock_time.return_value = self.NOW
+            feed.update()
+            mock_time.return_value = self.NOW + 60
+            feed.update()
+            self.assertEqual(mock_get.call_count, 1)
+
+            mock_time.return_value = self.NOW + 101 * 60
+            feed.update()
+            self.assertEqual(mock_get.call_count, 2)

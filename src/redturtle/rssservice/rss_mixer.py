@@ -208,7 +208,7 @@ class RSSMixerFeed(object):
     @property
     def needs_update(self):
         """Check if this feed needs updating."""
-        now = time() / 6
+        now = time() / 60  # time in minutes
         return (self.last_update_time_in_minutes + self.timeout) < now
 
     def update(self):
